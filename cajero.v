@@ -6,10 +6,10 @@ Maquina Mealy */
 module cajero(
 	Clk, Reset, PIN, TARJETA_RECIBIDA, TIPO_TRANS, DIGITO, DIGITO_STB, 
   MONTO, MONTO_STB, BALANCE_ACTUALIZADO, ENTREGAR_DINERO, FONDOS_INSUFICIENTES,
-  PIN_INCORRECTO, ADVERTENCIA, Bloqueo
+  PIN_INCORRECTO, ADVERTENCIA, Bloqueo, TIPO_STB
 );
 
-input Clk, Reset, TARJETA_RECIBIDA, TIPO_TRANS, DIGITO_STB, MONTO_STB;
+input Clk, Reset, TARJETA_RECIBIDA, TIPO_TRANS, DIGITO_STB, MONTO_STB, TIPO_STB;
 input [15:0] PIN;
 input [3:0] DIGITO;
 input [31:0] MONTO;
@@ -25,8 +25,6 @@ reg [31:0] balance;
 reg [31:0] nxt_balance; 
 reg [15:0] pinCOMPLETO; 
 reg [15:0] nxt_pinCOMPLETO; 
-reg sec_reset; 
-reg nxt_sec_reset; 
 
 // Asignación de estados
 parameter	IDLE =4'b0001;
@@ -44,14 +42,14 @@ always @(posedge Clk) begin
     n_dig <= 0; // 
     balance <= 0; // el balance podìa tener cualquier valor inicial
     pinCOMPLETO <= 0; 
-    sec_reset<= 0;
+    
   end else begin
     state  <= nxt_state;  //sino se desactiva el reset, vamos al proximo estado en memoria
     incorrecto <= nxt_incorrecto;  
     n_dig <= nxt_n_dig; // Asigna el valor próximo de nxt_n_dig a n_dig
     balance <= nxt_balance; // Asigna el valor próximo de nxt_balance a balance
     pinCOMPLETO <= nxt_pinCOMPLETO; // Asigna el valor próximo de nxt_pinCOMPLETO a pinCOMPLETO
-    sec_reset<= nxt_sec_reset;
+    
   end
 end
 
@@ -64,7 +62,7 @@ always @(*) begin
   nxt_n_dig = n_dig; // Asigna el valor actual de n_dig a nxt_n_dig
   nxt_balance = balance; // Asigna el valor actual de balance a nxt_balance
   nxt_pinCOMPLETO = pinCOMPLETO; // Asigna el valor actual de pinCOMPLETO a nxt_pinCOMPLETO
-  nxt_sec_reset = sec_reset;
+
 
   BALANCE_ACTUALIZADO = 1'b0;
   ENTREGAR_DINERO = 1'b0;
@@ -88,10 +86,13 @@ always @(*) begin
             end   //calculamos en el siguiente ciclo de reloj, cuando se vuelva 4
           else if ((pinCOMPLETO==PIN)&&(n_dig==4)) begin
             nxt_incorrecto = 2'b00; //Cuando se ingresa la clave correcta se debe limpiar el contador de pines incorrectos
-            nxt_n_dig=0;
-            nxt_pinCOMPLETO=0; //ya que se evaluó el pin completo, se puede limpiar
-            if (TIPO_TRANS==1'b0) nxt_state = DEPOSITO;
-            else nxt_state = RETIRO;
+            if (TIPO_STB==1'b1) begin //le pedimos al cliente que avance la transacción
+              nxt_n_dig=0;
+              nxt_pinCOMPLETO=0; //ya que se evaluó el pin completo, se puede limpiar
+              if (TIPO_TRANS==1'b0) nxt_state = DEPOSITO;
+              else nxt_state = RETIRO;
+            end
+            
             end 
           else if ((pinCOMPLETO!=PIN)&&(n_dig==4)) begin
             nxt_incorrecto = incorrecto+1;
@@ -161,10 +162,6 @@ always @(*) begin
       ADVERTENCIA = 1'b0;
       Bloqueo = 1'b1;
       nxt_incorrecto = 2'b00;
-      if ((Reset==0)&&(sec_reset==0)) 
-        nxt_sec_reset=sec_reset+1;
-      else if ((Reset==1)&&(sec_reset==1)) nxt_state = IDLE; //si la secuencia es correcta se regresa al estado de espera  
-      // no hay else porque, si el pin no es correcto, sigue bloqueada
     end
     default nxt_state = state;
   endcase  
