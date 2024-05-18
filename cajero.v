@@ -72,7 +72,7 @@ always @(*) begin
   Bloqueo = 1'b0;
 
   case (state)
-    IDLE: begin //si empezamos con la compuerta cerrada
+    IDLE: begin 
       BALANCE_ACTUALIZADO = 1'b0;
       ENTREGAR_DINERO = 1'b0;
       FONDOS_INSUFICIENTES = 1'b0;
