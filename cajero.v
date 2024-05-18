@@ -35,10 +35,10 @@ parameter	BLOQUEADO=4'b1000;
 
 //Memoria de estados
 always @(posedge Clk) begin
-  //if ((Reset==0)&&(state!=BLOQUEADO)) begin //para bloqueado hay que hacer otra cosa
+
   if (Reset==0)begin
-    state  <= IDLE; // si hay un reset empezamos con estado de espera
-    incorrecto <= 0; //y con el contador en 0
+    state  <= IDLE; // si hay un reset 0 empezamos con estado de espera
+    incorrecto <= 0; //y con los contadores en 0
     n_dig <= 0; // 
     balance <= 0; // el balance podìa tener cualquier valor inicial
     pinCOMPLETO <= 0; 
@@ -81,7 +81,7 @@ always @(*) begin
       Bloqueo = 1'b0;
         if (TARJETA_RECIBIDA) begin
           if ((DIGITO_STB) && (n_dig<4)) begin //si no es el cuarto dìgito
-              nxt_pinCOMPLETO = pinCOMPLETO+(DIGITO << (n_dig * 4));
+              nxt_pinCOMPLETO = pinCOMPLETO+(DIGITO << (12-n_dig * 4));//***revisando
               nxt_n_dig=n_dig+1;     //hay que sacar el resto del strobe    
             end   //calculamos en el siguiente ciclo de reloj, cuando se vuelva 4
           else if ((pinCOMPLETO==PIN)&&(n_dig==4)) begin

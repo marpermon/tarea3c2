@@ -1,6 +1,8 @@
 //incluimos los archivos de tester y  controlador
 `include "testerO.v"
-`include "cajero.v"
+//`include "cajero.v"
+`include "sint_comp.v" //archivo sintetizado
+`include "cmos_cellsO.v" //archivo compuertas
                                         
 //modulo del testbench
 module cajero_tb;
@@ -17,7 +19,7 @@ module cajero_tb;
  //variables impresas en consola
   end
 
-//modulo del controlador
+//modulo del cajero
 cajero U0 (
     .Clk (Clk), 
     .Reset (Reset), 
